@@ -28,14 +28,14 @@ def read_pdf_2(filename):
     content = extract_text(filename)
     return repr(content), filename
 
-def write_text(content, filename):
+def write_text(content, filename, path='res_text/'):
     """
     writes the resolution to a text file
     param: content: the string extracted from the pdf
     param: filename: the name of the text file created
     """
     if type(content) == str: # avoids type error
-        file = Path('res_text/'+filename+'.txt') #user needs to make folder called res_text
+        file = Path(path+filename+'.txt') #user needs to make folder called res_text
         file.touch(exist_ok=True)
         with open(file, 'w') as text_file:
             # try/except to avoid encoding error
