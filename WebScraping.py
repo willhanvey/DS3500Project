@@ -1,9 +1,9 @@
-import pandas as pd
-import selenium.common.exceptions
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-import time
 import os
+import time
+import pandas as pd
+from selenium import webdriver
+import selenium.common.exceptions
+from selenium.webdriver.common.by import By
 
 
 PYCHARM_DIR = "C:\\Users\\baseb\\PycharmProjects\\DS3500Project\\DraftResolutions"
