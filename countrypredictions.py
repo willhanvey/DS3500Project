@@ -49,7 +49,7 @@ class Country:
         """
         column_list = self.words_df.columns
         df_dict = {}
-        # Only using words already in the model
+        # Only using words already in the initialized model
         for word in column_list:
             df_dict[word] = 0
         with open(file, 'r', encoding='UTF-8') as f:
