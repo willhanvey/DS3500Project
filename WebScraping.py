@@ -41,7 +41,7 @@ def un_webscrape(df, options):
     counter = 0
     pdf_list = []
     error_list = []
-    for i in range(1, 2700):
+    for i in range(len(df.index)):
         driver = webdriver.Chrome(executable_path= SERIUM_CHROME_PATH, chrome_options=options)
         link = df.iloc[i][9]
         driver.get(link)
