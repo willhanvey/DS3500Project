@@ -11,7 +11,7 @@ def trim_df(df, num):
     for column in df.columns:
         if df[column].sum() < num:
             droplist.append(column)
-    df = df.drop(droplist, axis = 1)
+    df = df.drop(droplist, axis=1)
     return df
 
 
