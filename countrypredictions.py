@@ -195,8 +195,9 @@ def main():
         for country in infile:
             country_list.append(Country(words_df, country.strip(), un_votes_df[country.strip()].tolist()))
     # Each country votes on the file provided in country.vote -> this can be changed to any text file and it will run
+    document = input('Please enter the name of the file you want countries to vote for:\n')
     for country in country_list:
-        country.vote('testresolution4.txt')
+        country.vote(document)
     print(VOTING_RECORD)
     print(f'Yes Votes: {len(VOTING_RECORD["Yes"])} \nNo Votes: {len(VOTING_RECORD["No"])}')
 
