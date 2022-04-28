@@ -18,8 +18,6 @@ import seaborn as sns
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 
-# list of all countries used in data cleaning (pycountry library)
-
 
 class Text:
     
@@ -39,7 +37,8 @@ class Text:
     def read_text(self, filename, min_length=4, stop_lst=['united', 'nations', 
                                                           'resolution','committee', 'assembly', 'general'],
                   stemmer="no"):
-        "Open file and clean text: remove punctuation, lowecase, short words, stop words"
+        """Open file and clean text: remove punctuation, lowecase, short words, stop words
+        writes clean data to txt files"""
         with open('res_text/'+filename) as file:
             txt = file.read()
         
@@ -51,7 +50,7 @@ class Text:
         # get rid of stop words, NLTK library
         country_lst = [list(pycountry.countries)[i].name.lower() for i in range(len(pycountry.countries))]
         stops = list(stopwords.words('english')) # stop words
-        stops.extend(stop_lst)
+        stops.extend(stop_lst) # add stop words
         
         # convert to list of words
         txt_split = [word for word in txt.split() if len(word)>min_length or word in country_lst]
@@ -60,8 +59,8 @@ class Text:
         # add stemming, make nation/nations the same
         if stemmer =="no":
             self.words.extend(txt_split_2) # extend list of words
-            self.save(filename, txt_split_2)
-            #### add later!!!!! self.write(filename, txt_split_2)    
+            self.save(filename, txt_split_2) # save data in dictionary
+            self.write(filename, txt_split_2) # write clean text to txt file
         else:
             txt_split_3 = [stemmer.stem(plural) for plural in txt_split_2]
             self.words.extend(txt_split_3)
@@ -69,42 +68,52 @@ class Text:
             self.write(filename, txt_split_3)
         
     def write(self, file, results):
+        """Write results to a txt file in a folder called clean_text"""
         write_text(",".join(results), filename=file, path="clean_text/")
     
     def count(self, country_name):
         """Returns integer: number of times a country is mentioned in all resolutions"""
         return self.words.count(country_name)
+    
     def wordcount_viz(self, comm=2):
-        # visualize most common words, excluding x most common words
+        """visualize most common words, excluding x most common words, default 2"""
+        # make dictionary of most common words
         most_com = dict(Counter(self.words).most_common(10+comm))
+        # define variables for visualization
         x = list(most_com.keys())[-10:]
         y = list(most_com.values())[-10:]
         y_pos = np.arange(len(x))
         
+        # create bar plot
         plt.bar(y_pos, y, align='center', alpha=0.8)
-        plt.xticks(y_pos, x, fontsize=12, rotation=60)
+        plt.xticks(y_pos, x, fontsize=8, rotation=60)
         plt.ylabel("Word Count")
         plt.xlabel("Word")
         plt.title("Number of time word appears accross all resolutions")
-        
+        plt.savefig("Common_words_count.png")
         plt.show()
 
     def country_count(self, UNSC_country ='libya',
-                      countries=["israel", "russian", "america", "france", "syria", "kosovo", "libya"]):
+                      countries=["israel", "russian", "america", "france", "syria", "kosovo", "libya"],
+                      title='Countries_Mentioned.png'):
         "Visualize how often a country is mentioned in UNSC Res and in general"
+        # count how often countries are mentioned
         country_count = []
         for country in countries:
             country_count.append(self.count(country))
         
+        # plot the countries mentioned in a bar plot
         plt.bar(np.arange(len(countries)), country_count, alpha=0.6, color='red')
-        plt.xticks(np.arange(len(countries)), countries, fontsize = 10, rotation=45)
-        plt.title("Country mentions")
-        plt.savefig("Countries_Mentioned.png")
+        plt.xticks(np.arange(len(countries)), countries, fontsize = 8, rotation=45)
+        plt.title(title[0:-4])
+        plt.savefig(title)
         plt.show()
         
+        # count how often one country is mentioned in the UNSC
         count = []
         spec_count = []
         df = pd.DataFrame(0, index = np.arange(1),columns=range(1995,2022,1))
+        # loop to only read UNSC resolutions and occurences of country
         for key, value in self.data.items():
             if key[0:2] == 'S_' and list(value).count(UNSC_country) != 0:
                 count.append(key[2:6])
@@ -114,10 +123,10 @@ class Text:
             else:
                 pass
         
+        # create scatter plot
         sns.scatterplot(data=df.transpose()).set(title="Security Council mentions of: "+UNSC_country)
         plt.savefig("UNSC_"+UNSC_country+".png")
         plt.close()
-        
         
     def hdi_viz(self, hdi_file='HDI.csv'):
         """Visualization function using HDI data for comparison"""
@@ -156,17 +165,36 @@ class Text:
                              alpha=0.7)
         ax.set(title="Relationship between country word count in the UN and HDI")
         # set xticks to show examples of countries with lower/higher HDI
-        ax.set_xticks(df_1["country"][::20])
+        ax.set_xticks([])
+        plt.savefig("HDI_Count_Correlation.png")
         plt.show()
     
-    def viz(self, x_words=['']):
+    def scatter_certain_words(self, df_1, x_words=["nuclear", "conflict", "crimes"],
+                              title="Occurence of certain words in General Assembly"):
+        """Visualize occurences of x words in scatter plots"""
+        df_1 = df_1.set_index("index")
+        
+        for word in x_words:
+            df_1[word] = df_1['only_words'].str.count(word)
+        
+        fig, axes = plt.subplots(1,1)
+        sns.scatterplot(data=df_1.drop('word_count', axis=1))
+        # limit y axis to avoid low counts
+        plt.ylim(5,60)
+        # elimate x ticks and title plot
+        axes.set_xticks([])
+        axes.set(title=title)
+        plt.savefig(title+".png")
+        plt.show()
+        plt.close()
+    
+    def ga_sc_viz(self, x_words=['american','russian','nuclear', 'conflict', 'crimes'], title="Occurence of certain words in Security Council"):
         """Visualization function"""
         # make dataframe with size data
         df = pd.DataFrame(data=self.size.values(), index=self.size.keys(), columns=['word_count'])
         # add words to the df
         df['words'] = list(self.data.values())
         df['only_words'] = df['words'].apply(lambda x: " ".join(map(str, x)))
-        print(df['only_words'])
         
         # reset index to distinguish GA and SC
         df_1 = df.reset_index()
@@ -179,15 +207,18 @@ class Text:
         sns.lineplot(x=df_3['index'],y=df_3['word_count'], data=df_2)
         axes.set_xticks([])
         plt.legend(title='Word Count over time', labels=['UNGA', 'UNSC'])
+        plt.savefig("word_count_time.png")
         plt.show()
+        plt.close()
         
-        print(df['only_words'].str.count('america'))
-        #df['x_count'] = df[df['words']]
-        #df['x_count'] = df.apply(lambda x: x.count("security"), axis=0)
-        
+        # make scatter plots for the two data frames: security countil and general assembly
+        self.scatter_certain_words(df_3, x_words=x_words, 
+                                   title=title)
+        self.scatter_certain_words(df_2 , x_words=x_words)
 
 def main():
-    print('Hello there!')
+    
+    # initialize class
     texts = Text()
     # get list of files in folder
     all_files = os.listdir("res_text/")
@@ -195,20 +226,25 @@ def main():
     all_f = [file for file in all_files if file[-5:-8:-1]=='NE-'] # keep english only
     all_f = [file for file in all_f if file[-6:-9:-1]!='ddA'] # remove addendums
     
-    print(len(all_f))
-    for filename in all_f[0:3500:50]:
+    # read all the texts
+    for filename in all_f:
         texts.read_text(filename)
-        
-    #texts.wordcount_viz(comm=5)
-    #texts.country_count()
-    #texts.hdi_viz()
-    texts.viz()
+    
+    # make the visualizations
+    texts.wordcount_viz(comm=20)
+    texts.country_count()
+    texts.country_count(countries=['sustainable', 'economy', 'product', 'mortality', 'water', 'hunger'], 
+                        title="development_words.png")
+    texts.hdi_viz()
+    texts.ga_sc_viz()
 
 if __name__ == "__main__":
     main()
 
 """Sources of code:
 https://stackoverflow.com/questions/45306988/column-of-lists-convert-list-to-string-as-a-new-column
+https://stackoverflow.com/questions/17573814/count-occurrences-of-each-of-certain-words-in-pandas-dataframe
+
     
 """
 
