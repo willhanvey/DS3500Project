@@ -7,7 +7,7 @@ DS3500 Project
 """
 
 # imports
-from tika import parser # pip install tika
+from tika import parser
 from pathlib import Path
 from pdfminer.high_level import extract_text
 
@@ -46,7 +46,6 @@ def write_text(content, filename, path='res_text/'):
     else: #if content isn't a string
         pass
 
-
 def main():  
     
     # open and make list of pdfs to read
@@ -60,9 +59,6 @@ def main():
         content, filename = read_pdf(res) # read pdf
         write_text(content, filename=filename[:-4]) # write res to txt file
         d[filename] = content # store filename and content in dict
-    
-    print(d)
-    print(len(d))
     
 if __name__ == '__main__':
     main()
